@@ -1,33 +1,46 @@
-docker.io:
+python3-pip:
   pkg.installed:
-    - name: docker
+    - name: python3-pip
 
-docker-service:
-  service.running:
+docker-sdk:
+  pip.installed:
     - name: docker
-    - enable: True
+    - require:
+      - pkg: python3-pip
+
+docker-pkg:
+  pkg.installed:
+    - name: docker.io
 
 /tmp/chatroom-backend.tar:
   file.managed:
     - source: salt://chatroom/backend/chatroom-backend.tar
     - mode: 644
 
-load-backend-image:
-  cmd.run:
-    - name: docker load -i /tmp/chatroom-backend.tar
-    - unless: docker image inspect chatroom-backend:stage >/dev/null 2>&1
+docker-service:
+  service.running:
+    - name: docker
+    - enable: True
+    - require:
+      - pkg: docker-pkg
+
+backend-image:
+  docker_image.present:
+    - name: chatroom-backend
+    - tag: stage
+    - load:
+      - source: /tmp/chatroom-backend.tar
     - require:
       - file: /tmp/chatroom-backend.tar
       - service: docker-service
 
-run-backend:
-  cmd.run:
-    - name: |
-        if docker ps --filter name=chatroom-backend --filter ancestor=chatroom-backend:stage | grep -q chatroom-backend; then
-          docker restart chatroom-backend
-        else
-          docker run -d --name chatroom-backend -p 8080:8080 chatroom-backend:stage
-        fi
+backend-container:
+  docker_container.running:
+    - name: chatroom-backend
+    - image: chatroom-backend:stage
+    - port_bindings:
+      - 8080:8080
+    - restart_policy: unless-stopped
     - require:
-      - cmd: load-backend-image
+      - docker_image: backend-image
       - service: docker-service
