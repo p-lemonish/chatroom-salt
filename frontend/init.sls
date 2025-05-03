@@ -1,6 +1,5 @@
-nginx-pkg:
-  pkg.installed:
-    - name: nginx
+include:
+  - chatroom.base
 
 /tmp/frontend-dist.tar.gz:
   file.managed:
@@ -15,29 +14,30 @@ nginx-pkg:
 untar-dist:
   cmd.run:
     - name: tar xf /tmp/frontend-dist.tar.gz -C /var/www/html
-    - unless: test -f /var/www/html/index.html
+    - unless: test -f /var/www/html/dist/index.html
     - require:
       - file: /tmp/frontend-dist.tar.gz
-    - watch_in:
-      - service: nginx-service
 
 /etc/nginx/sites-available/frontend.conf:
   file.managed:
     - source: salt://chatroom/frontend/frontend.conf
+    - template: jinja
+    - context:
+      ssl_dir: /etc/nginx/ssl
+      domain: chat.mihelson-adamson.com
 
 /etc/nginx/sites-enabled/frontend.conf:
-  file.managed:
-    - source: /etc/nginx/sites-available/frontend.conf
-    - force: True 
+  file.symlink:
+    - target: /etc/nginx/sites-available/frontend.conf
+    - force: True
     - require:
       - file: /etc/nginx/sites-available/frontend.conf
+      - cmd: obtain_certificate
 
 nginx-service:
   service.running:
     - name: nginx
     - enable: True 
     - watch:
-      - cmd: untar-dist
       - file: /etc/nginx/sites-available/frontend.conf
-      - file: /etc/nginx/sites-enabled/frontend.conf
 
