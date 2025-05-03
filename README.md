@@ -60,6 +60,16 @@ add a temporary line in your `/etc/hosts/`
 YOUR-MINION-IP chatroom-example.com
 ```
 
+Since nginx is configured to use SSL, your server also needs valid certificates.
+If you're testing this on a virtual machine, setting up self-signed certificates
+can be done with the following commands.
+
+```bash 
+openssl req -x509 -nodes -newkey rsa:2048 \
+  -days 365 -subj "/CN=chatroom-example.com" \
+  -keyout chatroom.key -out chatroom.crt
+```
+
 Now entering `chatroom-example.com` on the browser should present you with the 
 starting page of the chatroom! Enter a name or leave it blank and press the "Chat!"
 button to see the chatting interface. Next this should be spun up on a server where
