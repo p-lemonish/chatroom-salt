@@ -12,11 +12,6 @@ docker-pkg:
   pkg.installed:
     - name: docker.io
 
-/tmp/chatroom-backend.tar:
-  file.managed:
-    - source: salt://chatroom/backend/chatroom-backend.tar
-    - mode: 644
-
 docker-service:
   service.running:
     - name: docker
@@ -28,11 +23,13 @@ backend-image:
   docker_image.present:
     - name: chatroom-backend
     - tag: stage
-    - load:
-      - source: /tmp/chatroom-backend.tar
+    - load: salt://chatroom/backend/chatroom-backend.tar
     - require:
-      - file: /tmp/chatroom-backend.tar
       - service: docker-service
+
+install_apparmor:
+  pkg.installed:
+    - name: apparmor
 
 backend-container:
   docker_container.running:
