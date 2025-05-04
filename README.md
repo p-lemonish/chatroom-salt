@@ -11,10 +11,12 @@ the .sls files. In my case this is in `/srv/salt`.
 
 ```bash
 cd /srv/salt
-git clone git@github.com:p-lemonish/chatroom-salt.git
+git clone git@github.com:p-lemonish/chatroom-salt.git chatroom
 ```
 
-Then, for example in the home directory, clone my repositories `chatroom-react` 
+Note that the directory should be named `chatroom`.
+
+Then, for example into the home directory, clone my repositories `chatroom-react` 
 and `chatroom-go`.
 
 ```bash
@@ -32,45 +34,65 @@ tar cvf dist.tar.gz dist
 mv dist.tar.gz /srv/salt/chatroom/frontend/
 ```
 
-Next go into `chatroom-go` and build the docker image then tag it as stage as 
-currently this practice is done in a staging environment before deploying to
-my own server. After tagging, save it as `.tar`, then move it to 
-`/srv/salt/chatroom/backend`.
+Next go into `chatroom-go` and build the docker image then tag it as dev or prod
+depending on if you're deploying this image into production (on a server requiring ssl)
+or locally (can use self signed certs). After tagging, save it as `.tar` using 
+`docker save` and give sufficient rights (mode 644), then move it to `/srv/salt/chatroom/backend`.
+The example below sets the tag as `dev`. For prod, append `-prod` to the tarfile instead.
 
 ```bash
 cd chatroom-go/
-docker build -t chatroom-backend .
-docker tag chatroom-backend:latest chatroom-backend:stage
-docker save chatroom-backend:stage -o chatroom-backend.tar
-mv chatroom-backend.tar /srv/salt/chatroom/backend/
+docker build -t chatroom-backend:latest .
+docker tag chatroom-backend:latest chatroom-backend:dev
+docker save chatroom-backend:dev -o chatroom-backend-dev.tar
+chmod 644 chatroom-backend-dev.tar
+mv chatroom-backend-dev.tar /srv/salt/chatroom/backend/
 ```
 
 Almost there! Now assuming your minion is up and listening. Running the following
-commands should run it all up. Replace `'*'` with your the minion name if required.
+commands should run it all up. Replace `'salt-slave-1'` with your the minion name if required.
 
 ```bash
-sudo salt '*' state.apply chatroom.frontend
-sudo salt '*' state.apply chatroom.backend
+sudo salt 'salt-slave-1' state.apply 
 ```
 
-Next, since the `nginx` configuration file has set the vhost as `chatroom-example.com`
-add a temporary line in your `/etc/hosts/`
+Next, if you're in dev and you're locally hosting the chatroom, add a temporary line in your `/etc/hosts/`
 
 ```bash 
 YOUR-MINION-IP chatroom-example.com
-```
-
-Since nginx is configured to use SSL, your server also needs valid certificates.
-If you're testing this on a virtual machine, setting up self-signed certificates
-can be done with the following commands.
-
-```bash 
-openssl req -x509 -nodes -newkey rsa:2048 \
-  -days 365 -subj "/CN=chatroom-example.com" \
-  -keyout chatroom.key -out chatroom.crt
 ```
 
 Now entering `chatroom-example.com` on the browser should present you with the 
 starting page of the chatroom! Enter a name or leave it blank and press the "Chat!"
 button to see the chatting interface. Next this should be spun up on a server where
 other people can also interact with the chat.
+
+### Pillar examples
+
+Under `chatroom-salt/pillar/examples/` you’ll find four `.example` files:
+
+* `chatroom.sls.example` (shared SSL paths)
+* `dev.sls.example` (dev mode, domain)
+* `prod.sls.example` (prod mode, domain)
+* `top.sls.example` (mapping minions -> pillar sets)
+
+Copy them into your real pillar directory and edit the values as needed:
+
+```bash
+cd /srv/pillar
+cp pillar/examples/ ./
+```
+
+Then open both `dev.sls` / `prod.sls` and set your own domain and mode:
+
+```yaml
+# dev.sls
+chatroom:
+  mode: dev
+  domain: chatroom-example.com
+
+# prod.sls
+chatroom:
+  mode: prod
+  domain: chat.example.com
+```
