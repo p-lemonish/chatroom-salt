@@ -35,13 +35,6 @@ obtain_certificate:
     - watch_in:
       - service: nginx-reload
 
-nginx-reload:
-  service.running:
-    - name: nginx
-    - reload: True
-    - watch:
-      - cmd: obtain_certificate 
-
 {% else %}
 obtain_certificate:
   cmd.run:
@@ -51,10 +44,11 @@ obtain_certificate:
           -newkey rsa:2048 \
           -keyout {{ pillar['chatroom']['ssl']['dev_key'] }} \
           -out    {{ pillar['chatroom']['ssl']['dev_cert'] }} \
-          -subj "/CN={{ pillar['chatroom']['domain'] }}"
+          -subj "/CN={{ domain }}"
     - unless: test -f {{ pillar['chatroom']['ssl']['dev_cert'] }}
     - require:
       - file: ssl_directory
+{% endif %}
 
 nginx-reload:
   service.running:
@@ -62,4 +56,3 @@ nginx-reload:
     - reload: True
     - watch:
       - cmd: obtain_certificate
-{% endif %}
