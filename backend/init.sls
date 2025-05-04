@@ -19,11 +19,13 @@ docker-service:
     - require:
       - pkg: docker-pkg
 
+{% set mode = pillar['chatroom']['mode'] %}
 backend-image:
   docker_image.present:
     - name: chatroom-backend
-    - tag: stage
-    - load: salt://chatroom/backend/chatroom-backend.tar
+    - tag: {{ mode }}
+    - load: salt://chatroom/backend/chatroom-backend-{{ mode }}.tar
+    - force: True
     - require:
       - service: docker-service
 
@@ -34,7 +36,7 @@ install_apparmor:
 backend-container:
   docker_container.running:
     - name: chatroom-backend
-    - image: chatroom-backend:stage
+    - image: chatroom-backend:{{ mode }}
     - port_bindings:
       - 8080:8080
     - restart_policy: unless-stopped
