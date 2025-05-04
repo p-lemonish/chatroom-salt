@@ -14,8 +14,9 @@ include:
 untar-dist:
   cmd.run:
     - name: tar xf /tmp/frontend-dist.tar.gz -C /var/www/html
-    - unless: test -f /var/www/html/dist/index.html
     - require:
+      - file: /tmp/frontend-dist.tar.gz
+    - onchanges:
       - file: /tmp/frontend-dist.tar.gz
 
 /etc/nginx/sites-available/frontend.conf:
