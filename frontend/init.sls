@@ -23,9 +23,6 @@ untar-dist:
   file.managed:
     - source: salt://chatroom/frontend/frontend.conf
     - template: jinja
-    - context:
-      ssl_dir: /etc/nginx/ssl
-      domain: chat.mihelson-adamson.com
 
 /etc/nginx/sites-enabled/frontend.conf:
   file.symlink:

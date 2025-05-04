@@ -1,3 +1,6 @@
+{% set mode   = pillar['chatroom']['mode'] %}
+{% set domain = pillar['chatroom']['domain'] %}
+
 include:
   - chatroom.base
 
@@ -14,6 +17,7 @@ ssl_directory:
     - group: root
     - mode: 700
 
+{% if mode == 'prod' %}
 obtain_certificate:
   cmd.run:
     - name: >
@@ -23,8 +27,8 @@ obtain_certificate:
         --email patrikmihelson@gmail.com
         --webroot
         -w /var/www/html
-        -d chat.mihelson-adamson.com
-    - unless: test -f /etc/letsencrypt/live/chat.mihelson-adamson.com/fullchain.pem
+        -d {{ domain}}
+    - unless: test -f /etc/letsencrypt/live/{{ domain}}/fullchain.pem
     - require:
       - pkg: install_certbot
       - file: ssl_directory
@@ -35,3 +39,27 @@ nginx-reload:
   service.running:
     - name: nginx
     - reload: True
+    - watch:
+      - cmd: obtain_certificate 
+
+{% else %}
+obtain_certificate:
+  cmd.run:
+    - name: |
+        mkdir -p /etc/nginx/ssl
+        openssl req -x509 -nodes -days 1 \
+          -newkey rsa:2048 \
+          -keyout {{ pillar['chatroom']['ssl']['dev_key'] }} \
+          -out    {{ pillar['chatroom']['ssl']['dev_cert'] }} \
+          -subj "/CN={{ pillar['chatroom']['domain'] }}"
+    - unless: test -f {{ pillar['chatroom']['ssl']['dev_cert'] }}
+    - require:
+      - file: ssl_directory
+
+nginx-reload:
+  service.running:
+    - name: nginx
+    - reload: True
+    - watch:
+      - cmd: obtain_certificate
+{% endif %}
