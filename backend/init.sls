@@ -38,6 +38,9 @@ backend-container:
     - port_bindings:
       - 8080:8080
     - restart_policy: unless-stopped
+    - log_driver: journald
+    - log_opt: 
+      - tag: chatroom-backend
     - require:
       - docker_image: backend-image
       - service: docker-service
