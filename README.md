@@ -139,10 +139,6 @@ other people can also interact with the chat.
 
 ## Internal architecture
 
-Here I will explain what the role of each sls-file is.
-
-***
-
 ### chatroom/base/init.sls
 The sole point of base is to initialize and configure Nginx in a default state, 
 so that for a fresh instance with no certificates yet, it can fetch certificates 
