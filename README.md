@@ -2,10 +2,27 @@
 
 ![](chatroom.png)
 
+***
+
+## Table of Contents
+
+- [What is this](#what-is-this)
+- [How to set it up](#how-to-set-it-up)
+- [Pillar examples](#pillar-examples)
+- [Bringing the chatroom up](#bringing-the-chatroom-up)
+- [Internal architecture](#internal-architecture)
+  - [chatroom/base/init.sls](#chatroombaseinitsls)
+  - [chatroom/cert/init.sls](#chatroomcertinitsls)
+  - [chatroom/frontend/frontend.conf](#chatroomfrontendfrontendconf)
+  - [chatroom/frontend/init.sls](#chatroomfrontendinitsls)
+  - [chatroom/backend/init.sls](#chatroombackendinitsls)
+
+## What is this?
+
 This is a repo meant for documentation of me practicing Salt. Here I've built a saltstack 
 which will setup a live chatroom where users can, without registering, enter into
 a chatroom and talk to other users connected via websockets. Users can create 
-their own rooms or chat in the default main room where users are introduced to 
+their own rooms or chat in the default main room where they are introduced to 
 upon entering the chat service after choosing (or not choosing) a name.
 
 ## How to set it up?
@@ -120,3 +137,51 @@ starting page of the chatroom! Enter a name or leave it blank and press the "Cha
 button to see the chatting interface. Next, this should be spun up on a server where
 other people can also interact with the chat.
 
+## Internal architecture
+
+Here I will explain what the role of each sls-file is.
+
+### chatroom/base/init.sls
+The sole point of base is to initialize and configure Nginx in a default state, 
+so that for a fresh instance with no certificates yet, it can fetch certificates 
+from certbot. The `basenginx.conf` is the configuration file dropped to Nginx while 
+this setup is going on. It simply makes sure the acme-challenge can be requested
+from the server. After it's done the configuration file will be removed.
+
+This was created because the `frontend.conf`, that is the actual configuration state
+file we want to give Nginx, depends on a valid certificate, so otherwise it would be 
+in a loop where frontend can't deploy because there is no certificate, but the 
+certificate can't be obtained as there is no daemon serving for certbot.
+
+Once the server has certificates, the job of base is done and shouldn't be needed 
+anymore.
+
+### chatroom/cert/init.sls
+The job of this state file is to install Certbot and it's dependencies, generate 
+valid certificates for the prod-domain and otherwise generate self-signed certificates
+for a dev-domain using `openssl`.
+
+### chatroom/frontend/frontend.conf
+This configuration file will proxy the chatroom's endpoints to the backend, setting
+headers such as the Upgrade header which will ensure the websocket connection can 
+bet established.
+
+It uses data stored in the pillar to set the configuration file appropriately 
+depending on if the server is deployed on dev or prod.
+
+The React app will be served through static files stored in `/var/www/html/dist`.
+The responsibility of filling this directory correctly is on `frontend/init.sls`.
+
+### chatroom/frontend/init.sls
+Will grab the `dist.tar.gz` stored in to the Salt server and deploy it into 
+`/var/www/html/dist`. It also initializes `frontend.conf` and restarts Nginx 
+everytime the configuration file is updated.
+
+### chatroom/backend/init.sls
+Installs `python3-pip`, `docker-sdk` via `pip`, and `docker`. These will all be 
+used for getting the backend image and set the container up and listening for 
+requests.
+
+Depending on if we're working in dev or prod, it will also name the container 
+accordingly. This will be beneficial to separate the two environments, to prevent
+some oopsies.
