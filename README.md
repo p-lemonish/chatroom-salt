@@ -141,6 +141,8 @@ other people can also interact with the chat.
 
 Here I will explain what the role of each sls-file is.
 
+***
+
 ### chatroom/base/init.sls
 The sole point of base is to initialize and configure Nginx in a default state, 
 so that for a fresh instance with no certificates yet, it can fetch certificates 
@@ -156,10 +158,14 @@ certificate can't be obtained as there is no daemon serving for certbot.
 Once the server has certificates, the job of base is done and shouldn't be needed 
 anymore.
 
+***
+
 ### chatroom/cert/init.sls
 The job of this state file is to install Certbot and it's dependencies, generate 
 valid certificates for the prod-domain and otherwise generate self-signed certificates
 for a dev-domain using `openssl`.
+
+***
 
 ### chatroom/frontend/frontend.conf
 This configuration file will proxy the chatroom's endpoints to the backend, setting
@@ -172,10 +178,14 @@ depending on if the server is deployed on dev or prod.
 The React app will be served through static files stored in `/var/www/html/dist`.
 The responsibility of filling this directory correctly is on `frontend/init.sls`.
 
+***
+
 ### chatroom/frontend/init.sls
 Will grab the `dist.tar.gz` stored in to the Salt server and deploy it into 
 `/var/www/html/dist`. It also initializes `frontend.conf` and restarts Nginx 
 everytime the configuration file is updated.
+
+***
 
 ### chatroom/backend/init.sls
 Installs `python3-pip`, `docker-sdk` via `pip`, and `docker`. These will all be 
