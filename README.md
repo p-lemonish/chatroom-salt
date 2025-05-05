@@ -170,7 +170,7 @@ for a dev-domain using `openssl`.
 ### chatroom/frontend/frontend.conf
 This configuration file will proxy the chatroom's endpoints to the backend, setting
 headers such as the Upgrade header which will ensure the websocket connection can 
-bet established.
+bet established. It also will redirect all HTTP -> HTTPS.
 
 It uses data stored in the pillar to set the configuration file appropriately 
 depending on if the server is deployed on dev or prod.
@@ -188,10 +188,15 @@ everytime the configuration file is updated.
 ***
 
 ### chatroom/backend/init.sls
-Installs `python3-pip`, `docker-sdk` via `pip`, and `docker`. These will all be 
-used for getting the backend image and set the container up and listening for 
-requests.
+Installs `python3-pip`, `docker-sdk` via `pip`, along with `docker` and `AppArmor`. 
+These will all be used for getting the backend image and set the container up and 
+listening for requests. After installation, it will also ensure the Docker and 
+AppArmor daemons are running.
 
 Depending on if we're working in dev or prod, it will also name the container 
 accordingly. This will be beneficial to separate the two environments, to prevent
 some oopsies.
+
+The docker image saved on the master will be turned into a `.tar`-file, which 
+is placed to `/srv/salt/chatroom/backend` so that it can be then moved to the 
+minion. Once the file is moved, the minion will untar it by running `docker load`.
