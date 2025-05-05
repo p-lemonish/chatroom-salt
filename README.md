@@ -56,7 +56,7 @@ Before running the Salt state, we should check up with pillars.
 
 ### Pillar examples
 
-Under `chatroom-salt/pillar/examples/` you’ll find four `.example` files
+Under `chatroom-salt/pillar/examples/` you’ll find four example files of pillars 
 
 - `chatroom.sls` (shared SSL paths)
 - `dev.sls` (dev mode and domain)
@@ -86,6 +86,19 @@ chatroom:
 
 ### Bringing the chatroom up
 
+Your `top.sls` at `/srv/salt` should contain the following lines, to set the order 
+in which the states are run
+
+```yaml
+base:
+  'salt-minion':
+    - chatroom.base
+    - chatroom.cert
+    - chatroom.frontend
+    - chatroom.backend
+```
+
+
 Now assuming your minion is up and listening. Running the following
 commands should run it all up. Replace `'salt-minion'` with your minion name if required.
 
@@ -93,7 +106,7 @@ commands should run it all up. Replace `'salt-minion'` with your minion name if 
 sudo salt 'salt-minion' state.apply 
 ```
 
-Next, if you're in dev and you're locally hosting the chatroom, add a temporary line in your `/etc/hosts/`
+Next, if you're in dev and you're locally hosting the chatroom, add a temporary line in your `/etc/hosts`
 
 ```bash 
 YOUR-MINION-IP chatroom-dev-domain.com
