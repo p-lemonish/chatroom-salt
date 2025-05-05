@@ -177,9 +177,9 @@ The responsibility of filling this directory correctly is on `frontend/init.sls`
 ***
 
 ### chatroom/frontend/init.sls
-Will grab the `dist.tar.gz` stored in to the Salt server and deploy it into 
-`/var/www/html/dist`. It also initializes `frontend.conf` and restarts Nginx 
-everytime the configuration file is updated.
+Will grab the `dist.tar.gz` stored in to the Salt server at `/srv/salt/chatroom`
+and deploy it into `/var/www/html/dist`. It also initializes `frontend.conf` and 
+restarts Nginx everytime the configuration file is updated.
 
 ***
 
