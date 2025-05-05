@@ -196,3 +196,7 @@ some oopsies.
 The docker image saved on the master will be turned into a `.tar`-file, which 
 is placed to `/srv/salt/chatroom/backend` so that it can be then moved to the 
 minion. Once the file is moved, the minion will untar it by running `docker load`.
+
+## License
+
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
