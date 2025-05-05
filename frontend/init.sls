@@ -1,6 +1,3 @@
-include:
-  - chatroom.base
-
 /tmp/frontend-dist.tar.gz:
   file.managed:
     - source: salt://chatroom/frontend/dist.tar.gz
