@@ -1,4 +1,7 @@
 # Charoom with Salt
+
+![](chatroom.png)
+
 This is a repo meant for documentation of me practicing Salt. Here I've built a saltstack 
 which will setup a live chatroom where users can, without registering, enter into
 a chatroom and talk to other users connected via websockets. Users can create 
