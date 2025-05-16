@@ -19,6 +19,7 @@ docker-service:
     - require:
       - pkg: docker-pkg
 
+{% set domain = pillar['chatroom']['domain'] %}
 {% set mode = pillar['chatroom']['mode'] %}
 backend-image:
   docker_image.present:
@@ -43,6 +44,8 @@ backend-container:
     - log_driver: journald
     - log_opt: 
       - tag: chatroom-backend
+    - environment:
+      - ALLOWED_ORIGIN=https://{{ domain }}
     - require:
       - docker_image: backend-image
       - service: docker-service
